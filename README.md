@@ -21,7 +21,7 @@ or tablet.
 A working example of a `rgl` graphic in mobile
 can be found [here](https://rgl-graphic-mobile-fix.netlify.app/) .
 
-## How use such fix for your rgl graphics
+## How to use such fix for your rgl graphics
 
 This 
 [file](https://github.com/lucio-cornejo/fix-rgl-for-mobile/blob/main/rgl-mobile-fix.html) 
