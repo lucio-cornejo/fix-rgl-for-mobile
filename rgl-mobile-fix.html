@@ -1,0 +1,49 @@
+<script>
+  let canvas;
+  let rgl, rglObject;
+  let previousTouch;
+
+  document.addEventListener(
+    'DOMContentLoaded', 
+    function () {
+      // Obtain element(s) to rotate
+
+      //// We assume that there is only ONE canvas tag in this page ////
+      canvas = document.querySelector('canvas');
+      rgl = canvas.parentNode.rglinstance;
+      //// How to do it if there is more than one rgl graphic ////
+      // Example: 
+      // R code for rgl graphic: 
+      //   rglwidget(elementId = "my_graphic")
+      // Appropriate JavaScript code: 
+      //   rgl = document.getElementById("my_graphic").rglinstance;
+      //   canvas = rgl.canvas;
+
+      rglObject = rgl.getObj(rgl.subsceneid); 
+
+      canvas.addEventListener(
+        'touchmove',
+        function (event) {
+          const touch = event.touches[0];
+
+          if (previousTouch) {
+            // These only store the movement of the first touch in the touches array
+            event.movementX = touch.pageX - previousTouch.pageX;
+            event.movementY = touch.pageY - previousTouch.pageY;
+            // X axis rotation
+            rglObject.par3d.userMatrix.rotate( event.movementX*0.5, 0, 1, 0);
+            rgl.drawScene();
+            // Y axis rotation
+            rglObject.par3d.userMatrix.rotate( event.movementY*0.5, 1, 0, 0);
+            // Animate the scene
+            rgl.drawScene();
+          };
+        
+          previousTouch = touch;
+        }
+      )
+      // Reset the information on last canvas touch
+      canvas.addEventListener('touchend', function () { previousTouch = null; });
+    }
+  )
+</script>

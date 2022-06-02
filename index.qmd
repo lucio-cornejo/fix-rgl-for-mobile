@@ -1,0 +1,123 @@
+---
+title: Fixing rgl graphics for mobile
+author: Lucio Cornejo
+date: 2022-02-23
+format: 
+  html:
+    theme: darkly
+---
+
+<style>
+  .custom-buttons { max-width: 30%; }
+</style>
+
+<div class="custom-buttons">
+<label for="x-coordinate">X</label>
+<input type="text" name = "x-coordinate" id="x-coordinate" value="1">
+
+<label for="y-coordinate">Y</label>
+<input type="text" name = "y-coordinate" id="y-coordinate" value="-1">
+
+<label for="z-coordinate">Z</label>
+<input type="text" name = "z-coordinate" id="z-coordinate" value="0">
+
+<label for="levelOfRotation">Select level for rotation speed</label>
+<input type="range" min="0" max="20" value="10" step="1" name="levelOfRotation" id="levelOfRotation">
+</div>
+
+<button type="button" onclick="toggleRotationAnimation()">Toggle rotation</button>
+
+```{r}
+#| label: setup
+#| include: false
+
+# Suppress separate window for the rgl graphic
+options(rgl.useNULL = TRUE) 
+library(rgl)
+```
+
+```{r}
+#| echo: false
+
+# Create random 3D graph
+x <- sort(rnorm(1000))
+y <- rnorm(1000)
+z <- rnorm(1000) + atan2(x,y)
+
+# Create rgl graphic
+plot3d(x, y, z, col = rainbow(1000))
+
+# Display rgl graphic
+rglwidget(elementId ="rgl")
+```
+
+<script>
+  let xCoordinate, yCoordinate, zCoordinate;
+  let rotationAnimation;
+  let rotationLevel = 0;
+  let rotationActivation = false;
+  
+  let canvas, rgl, rglObject;
+  let previousTouch = null;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    xCoordinate = document.querySelector('#x-coordinate');
+    yCoordinate = document.querySelector('#y-coordinate');
+    zCoordinate = document.querySelector('#z-coordinate');
+
+    rotationLevel = document.querySelector('#levelOfRotation');
+
+    rgl = document.getElementById("rgl").rglinstance;
+    canvas = rgl.canvas;
+    rglObject = rgl.getObj(rgl.subsceneid);
+
+    canvas.addEventListener('touchmove', function (event) {
+      const touch = event.touches[0];
+
+      if (previousTouch) {
+        // These only store the movement of the first touch in the touches array
+        event.movementX = touch.pageX - previousTouch.pageX;
+        event.movementY = touch.pageY - previousTouch.pageY;
+
+        // X axis rotation
+        rglObject.par3d.userMatrix.rotate( event.movementX*0.5, 0, 1, 0);
+        rgl.drawScene();
+        // Y axis rotation
+        rglObject.par3d.userMatrix.rotate( event.movementY*0.5, 1, 0, 0);
+        rgl.drawScene();
+      };
+      
+      previousTouch = touch;
+    });
+
+    canvas.addEventListener('touchend', function () { previousTouch = null; });
+  });
+
+  function toggleRotationAnimation () {
+    let X = isNaN(xCoordinate.value) ? 0 : Number(xCoordinate.value);
+    let Y = isNaN(yCoordinate.value) ? 0 : Number(yCoordinate.value);
+    let Z = isNaN(zCoordinate.value) ? 0 : Number(zCoordinate.value);
+
+    rotationActivation = !(rotationActivation);
+    clearInterval(rotationAnimation);
+
+    if(rotationActivation) {
+      // Check that the coordinates are not 0 nor non assigned
+      if ( X === 0 && Y === 0 && Z === 0 ){
+        rotationActivation = false;
+      } else {
+        rotationAnimation = setInterval( () => { rotate() }, 100);
+      }
+    }
+  }
+
+  function rotate ()  {
+    rglObject.par3d.userMatrix.rotate(
+      parseInt(rotationLevel.value),
+      isNaN(xCoordinate.value) || isNaN(Number(xCoordinate.value)) ? 0 : Number(xCoordinate.value),
+      isNaN(yCoordinate.value) || isNaN(Number(yCoordinate.value)) ? 0 : Number(yCoordinate.value),
+      isNaN(zCoordinate.value) || isNaN(Number(zCoordinate.value)) ? 0 : Number(zCoordinate.value)
+    );
+    rgl.drawScene();
+  };
+</script>
